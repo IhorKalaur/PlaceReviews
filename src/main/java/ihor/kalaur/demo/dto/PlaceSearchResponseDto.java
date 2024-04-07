@@ -10,22 +10,22 @@ public record PlaceSearchResponseDto(List<Place> places) {
         }
 
         public record Review(
-            String name,
-            String relativePublishTimeDescription,
-            int rating,
-            ReviewText text,
-            ReviewText originalText,
-            AuthorAttribution authorAttribution,
-            String publishTime
+                String name,
+                String relativePublishTimeDescription,
+                int rating,
+                ReviewText text,
+                ReviewText originalText,
+                AuthorAttribution authorAttribution,
+                String publishTime
         ) {
 
             public record ReviewText(String text, String languageCode) {
             }
 
             public record AuthorAttribution(
-                String displayName,
-                String uri,
-                String photoUri
+                    String displayName,
+                    String uri,
+                    String photoUri
             ) {
             }
         }
