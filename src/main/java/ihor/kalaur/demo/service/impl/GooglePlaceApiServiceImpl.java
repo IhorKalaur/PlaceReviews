@@ -26,9 +26,9 @@ public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
     private static final String API_KEY_HEADER = "X-Goog-Api-Key";
     private static final String RETURNED_TYPES_FIELD_MASK_HEADER = "X-Goog-FieldMask";
     private static final String FIELD_MASK_VALUE = "places.displayName.text,places.reviews";
+
     @Value("${ihor.kalaur.demo.google.place.api.key}")
     private String apiKey;
-
     private MapsPlaces mapsPlacesService;
 
     @PostConstruct
@@ -74,8 +74,8 @@ public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
 
         center.setLatitude(requestDto.locationBias().circle().center().latitude());
         center.setLongitude(requestDto.locationBias().circle().center().longitude());
-        circle.setCenter(center);
 
+        circle.setCenter(center);
         circle.setRadius(requestDto.locationBias().circle().radius());
 
         GoogleMapsPlacesV1SearchTextRequestLocationBias locationBias = new GoogleMapsPlacesV1SearchTextRequestLocationBias();
