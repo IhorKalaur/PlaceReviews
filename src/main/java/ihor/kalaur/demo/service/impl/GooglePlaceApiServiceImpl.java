@@ -84,28 +84,49 @@ public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
     }
 
     private PlaceSearchResponseDto convertResponseToDto(GoogleMapsPlacesV1SearchTextResponse apiResponse) {
-        List<PlaceSearchResponseDto.Place> places = apiResponse.getPlaces().stream().map(this::convertApiPlaceToDto).collect(Collectors.toList());
+        List<PlaceSearchResponseDto.Place> places = apiResponse.getPlaces().stream()
+                .map(this::convertApiPlaceToDto)
+                .collect(Collectors.toList());
         return new PlaceSearchResponseDto(places);
     }
 
+    private PlaceSearchResponseDto.Place convertApiPlaceToDto(
+            GoogleMapsPlacesV1Place apiPlace) {
+        PlaceSearchResponseDto.Place.DisplayName displayName =
+                new PlaceSearchResponseDto.Place.DisplayName(
+                        Optional.ofNullable(apiPlace.getDisplayName())
+                        .map(name -> name.getText()).orElse(""));
 
-    private PlaceSearchResponseDto.Place convertApiPlaceToDto(GoogleMapsPlacesV1Place apiPlace) {
-        PlaceSearchResponseDto.Place.DisplayName displayName = new PlaceSearchResponseDto.Place.DisplayName(Optional.ofNullable(apiPlace.getDisplayName()).map(name -> name.getText()).orElse(""));
-
-        List<Review> reviews = Optional.ofNullable(apiPlace.getReviews()).orElse(Collections.emptyList()).stream().map(this::convertApiReviewToDto).collect(Collectors.toList());
+        List<Review> reviews = Optional.ofNullable(apiPlace.getReviews())
+                .orElse(Collections.emptyList()).stream()
+                .map(this::convertApiReviewToDto)
+                .collect(Collectors.toList());
 
         return new PlaceSearchResponseDto.Place(displayName, reviews);
     }
 
     private Review convertApiReviewToDto(GoogleMapsPlacesV1Review apiReview) {
-        Review.ReviewText text = Optional.ofNullable(apiReview.getText()).map(t -> new Review.ReviewText(t.getText(), t.getLanguageCode())).orElse(new Review.ReviewText("", ""));
+        Review.ReviewText text = Optional.ofNullable(
+                apiReview.getText())
+                .map(t -> new Review.ReviewText(t.getText(), t.getLanguageCode()))
+                .orElse(new Review.ReviewText("", ""));
 
         Review.ReviewText originalText = Optional.ofNullable(apiReview.getOriginalText()).map(ot -> new Review.ReviewText(ot.getText(), ot.getLanguageCode())).orElse(new Review.ReviewText("", ""));
 
-        Review.AuthorAttribution authorAttribution = new Review.AuthorAttribution(Optional.ofNullable(apiReview.getAuthorAttribution()).map(GoogleMapsPlacesV1AuthorAttribution::getDisplayName).orElse(""), Optional.ofNullable(apiReview.getAuthorAttribution()).map(GoogleMapsPlacesV1AuthorAttribution::getUri).orElse(""), Optional.ofNullable(apiReview.getAuthorAttribution()).map(GoogleMapsPlacesV1AuthorAttribution::getPhotoUri).orElse(""));
+        Review.AuthorAttribution authorAttribution = new Review
+                .AuthorAttribution(
+                        Optional.ofNullable(apiReview.getAuthorAttribution())
+                                .map(GoogleMapsPlacesV1AuthorAttribution::getDisplayName)
+                                .orElse(""), Optional.ofNullable(apiReview.getAuthorAttribution())
+                .map(GoogleMapsPlacesV1AuthorAttribution::getUri).orElse(""),
+                Optional.ofNullable(apiReview.getAuthorAttribution())
+                        .map(GoogleMapsPlacesV1AuthorAttribution::getPhotoUri).orElse(""));
 
         return new Review(Optional.ofNullable(apiReview.getName()).orElse(""),
-                Optional.ofNullable(apiReview.getRelativePublishTimeDescription()).orElse(""), Optional.ofNullable(apiReview.getRating()).map(Double::intValue).orElse(0), // Обробка null для числових значень
+                Optional.ofNullable(
+                        apiReview.getRelativePublishTimeDescription())
+                        .orElse(""),
+                Optional.ofNullable(apiReview.getRating()).map(Double::intValue).orElse(0),
                 text, originalText, authorAttribution, Optional.ofNullable(apiReview.getPublishTime()).orElse(""));
     }
 }

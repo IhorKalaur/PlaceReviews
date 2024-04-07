@@ -1,7 +1,6 @@
 package ihor.kalaur.demo.dto;
 
 import java.util.List;
-import java.util.Optional;
 
 public record PlaceSearchResponseDto(List<Place> places) {
 
