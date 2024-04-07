@@ -7,6 +7,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
+
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -14,7 +15,8 @@ import java.util.List;
 
 @Service
 public class CsvFileReaderService implements FileReaderService<PlaceSearchRequestDto> {
-    private static final int RADIUS_OF_CIRCLE = 0;
+    private static final Double RADIUS_OF_CIRCLE = 0.0;
+    private static final Integer MAX_RESULT_COUNT = 1;
     private static final String ERROR_MESSAGE_TEMPLATE = "Can't read data from file: %s";
     private static final String COORDINATES_SPLIT_REGEX = ",";
     private static final String NAME_HEADER = "Name";
@@ -54,7 +56,7 @@ public class CsvFileReaderService implements FileReaderService<PlaceSearchReques
             PlaceSearchRequestDto.Circle circle = new PlaceSearchRequestDto.Circle(center, RADIUS_OF_CIRCLE);
             PlaceSearchRequestDto.LocationBias locationBias = new PlaceSearchRequestDto.LocationBias(circle);
 
-            return new PlaceSearchRequestDto(textQuery, locationBias);
+            return new PlaceSearchRequestDto(textQuery, MAX_RESULT_COUNT, locationBias);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid format for latitude or longitude.");
         }
