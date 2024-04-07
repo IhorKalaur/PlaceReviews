@@ -6,12 +6,11 @@ import ihor.kalaur.demo.service.FileWriterService;
 import ihor.kalaur.demo.service.GooglePlaceApiService;
 import ihor.kalaur.demo.service.impl.CsvFileReaderService;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor

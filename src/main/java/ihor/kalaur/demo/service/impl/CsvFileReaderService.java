@@ -3,15 +3,14 @@ package ihor.kalaur.demo.service.impl;
 import ihor.kalaur.demo.dto.PlaceSearchRequestDto;
 import ihor.kalaur.demo.exceptions.ReadDataFromFileException;
 import ihor.kalaur.demo.service.FileReaderService;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.springframework.stereotype.Service;
-
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CsvFileReaderService implements FileReaderService<PlaceSearchRequestDto> {
@@ -25,10 +24,11 @@ public class CsvFileReaderService implements FileReaderService<PlaceSearchReques
     @Override
     public List<PlaceSearchRequestDto> readFromFile(String pathToFile) {
         List<PlaceSearchRequestDto> restaurants = new ArrayList<>();
-        try (Reader reader = new FileReader(pathToFile);
-             CSVParser parser = CSVFormat.DEFAULT
-                     .withFirstRecordAsHeader()
-                     .parse(reader)) {
+        try (
+                Reader reader = new FileReader(pathToFile);
+                CSVParser parser = CSVFormat.DEFAULT
+                        .withFirstRecordAsHeader()
+                        .parse(reader)) {
 
             for (CSVRecord record : parser) {
                 String name = record.get(NAME_HEADER);
@@ -45,7 +45,8 @@ public class CsvFileReaderService implements FileReaderService<PlaceSearchReques
     private PlaceSearchRequestDto createPlaceSearchRequest(String textQuery, String coordinates) {
         String[] latLong = coordinates.split(COORDINATES_SPLIT_REGEX);
         if (latLong.length != 2) {
-            throw new IllegalArgumentException("Coordinates string must contain exactly one comma separating latitude and longitude.");
+            throw new IllegalArgumentException(
+                    "Coordinates string must contain exactly one comma separating latitude and longitude.");
         }
 
         try {
