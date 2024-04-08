@@ -3,6 +3,10 @@ package ihor.kalaur.demo.service.impl;
 import static org.apache.commons.text.StringEscapeUtils.escapeCsv;
 
 import ihor.kalaur.demo.dto.PlaceSearchResponseDto;
+import ihor.kalaur.demo.dto.PlaceSearchResponseDto.Place;
+import ihor.kalaur.demo.dto.PlaceSearchResponseDto.Place.Review;
+import ihor.kalaur.demo.dto.PlaceSearchResponseDto.Place.Review.AuthorAttribution;
+import ihor.kalaur.demo.dto.PlaceSearchResponseDto.Place.Review.ReviewText;
 import ihor.kalaur.demo.exceptions.WriteDataToFileException;
 import ihor.kalaur.demo.service.FileWriterService;
 import java.io.File;
@@ -19,45 +23,55 @@ public class CsvFileWriterService implements FileWriterService<PlaceSearchRespon
     private static final String COMA_SPLITTER = ",";
     private static final String NEW_LINE = System.lineSeparator();
     private static final String EMPTY_TEXT = "";
+    private static final Integer PLACE_INDEX = 0;
 
     @Override
     public void writeDataToFile(PlaceSearchResponseDto data, String pathToFile) {
         File file = new File(pathToFile);
 
         try (FileWriter writer = new FileWriter(file, true)) {
-
-            if (file.length() == 0) {
-                writer.append(HEADERS_FOR_OUTPUT_FILE);
-            }
+            writeHeadersForFile(file, writer);
 
             for (PlaceSearchResponseDto.Place place : data.places()) {
-                if (place.reviews() != null) {
-                    for (PlaceSearchResponseDto.Place.Review review : place.reviews()) {
-                        PlaceSearchResponseDto.Place.Review.ReviewText text = review.text();
-                        PlaceSearchResponseDto.Place.Review.ReviewText originalText = review.originalText();
-                        PlaceSearchResponseDto.Place.Review.AuthorAttribution author = review.authorAttribution();
-
-                        writer.append(escapeCsv(place.displayName().text())).append(COMA_SPLITTER);
-                        writer.append(escapeCsv(review.name())).append(COMA_SPLITTER);
-                        writer.append(escapeCsv(review.relativePublishTimeDescription())).append(COMA_SPLITTER);
-                        writer.append(String.valueOf(review.rating())).append(COMA_SPLITTER);
-                        writer.append(text != null && text.text() != null ? escapeCsv(text.text()) : EMPTY_TEXT)
-                                .append(COMA_SPLITTER);
-                        writer.append(originalText != null
-                                        && originalText.text() != null ? escapeCsv(originalText.text()) : EMPTY_TEXT)
-                                .append(COMA_SPLITTER);
-                        writer.append(escapeCsv(author.displayName())).append(COMA_SPLITTER);
-                        writer.append(escapeCsv(author.uri())).append(COMA_SPLITTER);
-                        writer.append(escapeCsv(author.photoUri())).append(COMA_SPLITTER);
-                        writer.append(escapeCsv(review.publishTime())).append(NEW_LINE);
-                    }
-                }
+                writePlaceDetails(place, writer);
             }
 
-            writer.flush();
         } catch (IOException e) {
             throw new WriteDataToFileException(
-                    String.format(ERROR_MESSAGE_TEMPLATE, data.places().get(0).displayName().text()), e);
+                    String.format(ERROR_MESSAGE_TEMPLATE, data.places().get(PLACE_INDEX).displayName().text()), e);
         }
+    }
+
+    private void writeHeadersForFile(File file, FileWriter writer) throws IOException {
+        if (file.length() == 0) {
+            writer.append(HEADERS_FOR_OUTPUT_FILE);
+        }
+    }
+
+    private void writePlaceDetails(PlaceSearchResponseDto.Place place, FileWriter writer) throws IOException {
+        if (place.reviews() != null) {
+            for (PlaceSearchResponseDto.Place.Review review : place.reviews()) {
+                writeReviewDetails(place, review, writer);
+            }
+        }
+    }
+
+    private void writeReviewDetails(Place place, Review review, FileWriter writer) throws IOException {
+        ReviewText text = review.text();
+        ReviewText originalText = review.originalText();
+        AuthorAttribution author = review.authorAttribution();
+
+        writer.append(escapeCsv(place.displayName().text())).append(COMA_SPLITTER);
+        writer.append(escapeCsv(review.name())).append(COMA_SPLITTER);
+        writer.append(escapeCsv(review.relativePublishTimeDescription())).append(COMA_SPLITTER);
+        writer.append(String.valueOf(review.rating())).append(COMA_SPLITTER);
+        writer.append(text != null && text.text() != null ? escapeCsv(text.text()) : EMPTY_TEXT)
+                .append(COMA_SPLITTER);
+        writer.append(originalText != null && originalText.text() != null ? escapeCsv(originalText.text()) : EMPTY_TEXT)
+                .append(COMA_SPLITTER);
+        writer.append(escapeCsv(author.displayName())).append(COMA_SPLITTER);
+        writer.append(escapeCsv(author.uri())).append(COMA_SPLITTER);
+        writer.append(escapeCsv(author.photoUri())).append(COMA_SPLITTER);
+        writer.append(escapeCsv(review.publishTime())).append(NEW_LINE);
     }
 }
