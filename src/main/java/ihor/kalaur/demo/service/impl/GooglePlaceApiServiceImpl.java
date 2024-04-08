@@ -11,6 +11,7 @@ import com.google.api.services.places.v1.model.GoogleMapsPlacesV1SearchTextReque
 import com.google.api.services.places.v1.model.GoogleMapsPlacesV1SearchTextRequestLocationBias;
 import com.google.api.services.places.v1.model.GoogleMapsPlacesV1SearchTextResponse;
 import com.google.api.services.places.v1.model.GoogleTypeLatLng;
+import com.google.api.services.places.v1.model.GoogleTypeLocalizedText;
 import ihor.kalaur.demo.dto.PlaceSearchRequestDto;
 import ihor.kalaur.demo.dto.PlaceSearchResponseDto;
 import ihor.kalaur.demo.dto.PlaceSearchResponseDto.Place;
@@ -34,6 +35,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
+    private static final String DEFAULT_EMPTY_VALUE = "";
+    private static final Integer DEFAULT_RATING = 0;
+    private static final String RESPONSE_BODY_LOG = "Response Body: {}";
+    private static final String RESPONSE_ERROR_LOG = "Failed to fetch restaurant reviews";
+    private static final String FETCH_DATA_FROM_GOOGLE_API_EXCEPTION_MESSAGE = "Can't get data about restaurant: ";
+    private static final String APPLICATION_NAME = "GetPlacesReviewsApp";
     private static final String API_KEY_HEADER = "X-Goog-Api-Key";
     private static final String RETURNED_TYPES_FIELD_MASK_HEADER = "X-Goog-FieldMask";
     private static final String FIELD_MASK_VALUE = "places.displayName.text,places.reviews";
@@ -45,7 +52,7 @@ public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
     @PostConstruct
     public void init() {
         mapsPlacesService = new MapsPlaces.Builder(new NetHttpTransport(), new GsonFactory(), null)
-                .setApplicationName("Your Application Name")
+                .setApplicationName(APPLICATION_NAME)
                 .setGoogleClientRequestInitializer(request -> request.getRequestHeaders()
                         .set(API_KEY_HEADER, apiKey)
                         .set(RETURNED_TYPES_FIELD_MASK_HEADER, FIELD_MASK_VALUE))
@@ -57,11 +64,11 @@ public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
         try {
             GoogleMapsPlacesV1SearchTextRequest requestModel = convertToGoogleSearchRequest(searchRequestDto);
             GoogleMapsPlacesV1SearchTextResponse response = mapsPlacesService.places().searchText(requestModel).execute();
-            log.info("Response Body: {}", response);
+            log.info(RESPONSE_BODY_LOG, response);
             return convertResponseToDto(response);
         } catch (Exception e) {
-            log.error("Failed to fetch restaurant reviews", e);
-            throw new FetchDataFromGoogleApiException("Can't get data about restaurant: " + searchRequestDto, e);
+            log.error(RESPONSE_ERROR_LOG, e);
+            throw new FetchDataFromGoogleApiException(FETCH_DATA_FROM_GOOGLE_API_EXCEPTION_MESSAGE + searchRequestDto, e);
         }
     }
 
@@ -104,7 +111,7 @@ public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
     private Place convertApiPlaceToDto(
             GoogleMapsPlacesV1Place apiPlace) {
         DisplayName displayName = new DisplayName(
-                Optional.ofNullable(apiPlace.getDisplayName()).map(name -> name.getText()).orElse(""));
+                Optional.ofNullable(apiPlace.getDisplayName()).map(GoogleTypeLocalizedText::getText).orElse(DEFAULT_EMPTY_VALUE));
 
         List<Review> reviews = Optional.ofNullable(apiPlace.getReviews()).orElse(Collections.emptyList()).stream()
                 .map(this::convertApiReviewToDto)
@@ -114,27 +121,34 @@ public class GooglePlaceApiServiceImpl implements GooglePlaceApiService {
     }
 
     private Review convertApiReviewToDto(GoogleMapsPlacesV1Review apiReview) {
-        ReviewText text = Optional.ofNullable(apiReview.getText())
-                .map(t -> new ReviewText(t.getText(), t.getLanguageCode()))
-                .orElse(new ReviewText("", ""));
+        ReviewText text =
+                Optional.ofNullable(apiReview.getText())
+                        .map(t -> new ReviewText(t.getText(), t.getLanguageCode()))
+                        .orElse(new ReviewText(DEFAULT_EMPTY_VALUE, DEFAULT_EMPTY_VALUE));
 
-        ReviewText originalText = Optional.ofNullable(apiReview.getOriginalText())
-                .map(ot -> new Review.ReviewText(ot.getText(), ot.getLanguageCode()))
-                .orElse(new Review.ReviewText("", ""));
+        ReviewText originalText =
+                Optional.ofNullable(apiReview.getOriginalText())
+                        .map(ot -> new ReviewText(ot.getText(), ot.getLanguageCode()))
+                        .orElse(new ReviewText(DEFAULT_EMPTY_VALUE, DEFAULT_EMPTY_VALUE));
 
-        AuthorAttribution authorAttribution = new Review
-                .AuthorAttribution(Optional.ofNullable(apiReview.getAuthorAttribution())
-                                .map(GoogleMapsPlacesV1AuthorAttribution::getDisplayName)
-                                .orElse(""), Optional.ofNullable(apiReview.getAuthorAttribution())
-                .map(GoogleMapsPlacesV1AuthorAttribution::getUri).orElse(""),
+        AuthorAttribution authorAttribution = new AuthorAttribution(
                 Optional.ofNullable(apiReview.getAuthorAttribution())
-                        .map(GoogleMapsPlacesV1AuthorAttribution::getPhotoUri).orElse(""));
+                                .map(GoogleMapsPlacesV1AuthorAttribution::getDisplayName)
+                                .orElse(DEFAULT_EMPTY_VALUE),
+                Optional.ofNullable(apiReview.getAuthorAttribution())
+                        .map(GoogleMapsPlacesV1AuthorAttribution::getUri).orElse(DEFAULT_EMPTY_VALUE),
+                Optional.ofNullable(apiReview.getAuthorAttribution())
+                        .map(GoogleMapsPlacesV1AuthorAttribution::getPhotoUri).orElse(DEFAULT_EMPTY_VALUE));
 
-        return new Review(Optional.ofNullable(apiReview.getName()).orElse(""),
+        return new Review(
+                Optional.ofNullable(apiReview.getName()).orElse(DEFAULT_EMPTY_VALUE),
                 Optional.ofNullable(
                         apiReview.getRelativePublishTimeDescription())
-                        .orElse(""),
-                Optional.ofNullable(apiReview.getRating()).map(Double::intValue).orElse(0),
-                text, originalText, authorAttribution, Optional.ofNullable(apiReview.getPublishTime()).orElse(""));
+                        .orElse(DEFAULT_EMPTY_VALUE),
+                Optional.ofNullable(apiReview.getRating()).map(Double::intValue).orElse(DEFAULT_RATING),
+                text,
+                originalText,
+                authorAttribution,
+                Optional.ofNullable(apiReview.getPublishTime()).orElse(DEFAULT_EMPTY_VALUE));
     }
 }

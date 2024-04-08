@@ -16,7 +16,15 @@ import org.springframework.stereotype.Service;
 public class CsvFileReaderService implements FileReaderService<PlaceSearchRequestDto> {
     private static final Double RADIUS_OF_CIRCLE = 0.0;
     private static final Integer MAX_RESULT_COUNT = 1;
-    private static final String ERROR_MESSAGE_TEMPLATE = "Can't read data from file: %s";
+    private static final Integer NUMBER_OF_PARAMETERS_FOR_COORDINATE_SYSTEM = 2;
+    private static final Integer INDEX_OF_LATITUDE = 0;
+    private static final Integer INDEX_OF_LONGITUDE = 1;
+    private static final String READ_DATA_FROM_FILE_EXCEPTION_MESSAGE = "Can't read data from file: %s";
+    private static final String ILLEGAL_NUMBER_OF_PARAMETERS_FOR_COORDINATE_SYSTEM_EXCEPTION_MESSAGE
+            = "Coordinates string must contain exactly one comma separating latitude and longitude.";
+    private static final String INVALID_FORMAT_FOR_LATITUDE_OR_LONGITUDE_EXCEPTION_MESSAGE
+            = "Invalid format for latitude or longitude";
+
     private static final String COORDINATES_SPLIT_REGEX = ",";
     private static final String NAME_HEADER = "Name";
     private static final String COORDINATES_HEADER = "Coordinates";
@@ -37,21 +45,20 @@ public class CsvFileReaderService implements FileReaderService<PlaceSearchReques
                 restaurants.add(restaurant);
             }
         } catch (Exception e) {
-            throw new ReadDataFromFileException(String.format(ERROR_MESSAGE_TEMPLATE, pathToFile), e);
+            throw new ReadDataFromFileException(String.format(READ_DATA_FROM_FILE_EXCEPTION_MESSAGE, pathToFile), e);
         }
         return restaurants;
     }
 
     private PlaceSearchRequestDto createPlaceSearchRequest(String textQuery, String coordinates) {
         String[] latLong = coordinates.split(COORDINATES_SPLIT_REGEX);
-        if (latLong.length != 2) {
-            throw new IllegalArgumentException(
-                    "Coordinates string must contain exactly one comma separating latitude and longitude.");
+        if (latLong.length != NUMBER_OF_PARAMETERS_FOR_COORDINATE_SYSTEM) {
+            throw new IllegalArgumentException(ILLEGAL_NUMBER_OF_PARAMETERS_FOR_COORDINATE_SYSTEM_EXCEPTION_MESSAGE);
         }
 
         try {
-            double latitude = Double.parseDouble(latLong[0].trim());
-            double longitude = Double.parseDouble(latLong[1].trim());
+            double latitude = Double.parseDouble(latLong[INDEX_OF_LATITUDE].trim());
+            double longitude = Double.parseDouble(latLong[INDEX_OF_LONGITUDE].trim());
 
             PlaceSearchRequestDto.Center center = new PlaceSearchRequestDto.Center(latitude, longitude);
             PlaceSearchRequestDto.Circle circle = new PlaceSearchRequestDto.Circle(center, RADIUS_OF_CIRCLE);
@@ -59,7 +66,7 @@ public class CsvFileReaderService implements FileReaderService<PlaceSearchReques
 
             return new PlaceSearchRequestDto(textQuery, MAX_RESULT_COUNT, locationBias);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid format for latitude or longitude.");
+            throw new IllegalArgumentException(INVALID_FORMAT_FOR_LATITUDE_OR_LONGITUDE_EXCEPTION_MESSAGE);
         }
     }
 }
